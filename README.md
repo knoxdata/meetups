@@ -9,7 +9,7 @@ Below is a list of the topics, speakers, and links to the folder internal to thi
 | 2018-12-06 |              End of the Year Social with KnoxPy              |                                                    |                                         |
 | 2018-10-09 |          Contribute to Hacktoberfest in Knoxville!           |                                                    |                                         |
 | 2018-10-09 |      Hacktoberfest Knoxville Part Deux: Evening Session      |                                                    |                                         |
-| 2018-09-20 |     Introduction to Geospatial Computing for Pythonistas     |                  Dr. Paulo Raposo                  |                                         |
+| 2018-09-20 |     Introduction to Geospatial Computing for Pythonistas     |                  Dr. Paulo Raposo                  |           [Folder](/2018_09)            |
 | 2018-09-06 |       Attend KnoxPy's Python Workshop [Using Anaconda]       |                                                    |                                         |
 | 2018-08-05 |      Extra Hours: OpenAI Five vs. Humans viewing party       |                                                    |                                         |
 | 2018-07-19 | An intro to deep reinforcement learning (with video games!)  |                    Zach Kimble                     |                                         |
