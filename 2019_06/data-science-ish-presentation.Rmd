@@ -1,0 +1,575 @@
+---
+title: "Data Science-Ish: The Use of Mixed Effects (or Multi-Level) Models for Analyzing Complex Data Sources"
+author: "Joshua Rosenberg"
+date: "2019-06-20 (updated: `r Sys.Date()`)"
+output:
+  xaringan::moon_reader:
+    css: [default, metropolis, metropolis-fonts, custom.css]
+    lib_dir: libs
+    nature:
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+---
+
+```{r setup, include=FALSE}
+options(htmltools.dir.version = FALSE)
+# rmarkdown::render("msu-workshop-2019.rmd", output_file = 'index.html')
+library(knitr)
+library(tidyverse)
+library(equatiomatic)
+```
+
+# #whoami
+
+.pull-left[
+* Joshua Rosenberg, Ph.D.
+* Assistant Professor, STEM Education, University of Tennessee, Knoxville
+* Dad (16 month toddler!)
+* Primary areas of interest:
+  * Data science in education
+  * Data science education
+]
+
+```{r, out.width = "350px", echo = FALSE, fig.align = "center"}
+include_graphics("img/kr-joro.jpg")
+```
+
+## Following along with the presentation
+
+- Code: https://github.com/jrosen48/data-science-ish
+- Presentation: https://jrosen48.github.io/data-science-ish
+
+---
+class: inverse, center, middle
+# Background/Motivation
+---
+
+# Rationale and Aim
+
+- Mixed effects (or multilevel) models are extensions of linear models (regressions)
+- Commonly used in experimental and observational research and policy and evaluation contexts
+- Are less widely-used by data scientists
+- One piece of evidence: Cross Validated has 1,392 questions tagged #mixed-model that are unanswere (of 3,337 total questions)
+- I am trying to introduce mixed effects model as a data science(-*ish*) statistical method that can be useful and is easy to estimate and interpret.
+
+---
+
+# Example: Rail-trails!
+
+## Springfield Greenway
+
+![](img/springfield-greenway.jpg)
+
+*Image from kz440gal on TraiLink.com*
+
+---
+
+# The Rails-to-Trails Conservancy
+
+- Rail trails are railroad tracks that have been converted into pathways/greenways
+- The [Rails-to-Trails Conservancy](https://www.railstotrails.org/) is an organization "dedicated to creating a nationwide network of trails from former rail lines and connecting corridors to build healthier places for healthier people"
+- [TrailLink](https://www.traillink.com/) is their website that lists most of the rail-trails in the United States (~4,000 total)
+- Let's take a look at their website
+---
+# TrailLink.com
+
+- Which rail-trail is best?
+- In one state
+- Across the nation
+- This can be a (surprisingly) difficult question to answer
+- View trails in TN here: https://www.traillink.com/trailsearch/?mmloc=tn
+
+**<center>What do you think? Which is (or, which are) the best?</center>**
+
+<center>Discuss your answer with an elbow partner!</center>
+
+---
+class: inverse, center, middle
+# Building up to Mixed Effects Models
+---
+
+# One data-based solution
+
+## A regression model!
+
+```{r, eval = FALSE, echo = FALSE}
+library(equatiomatic)
+mod1 <- lm(mpg ~ cyl + disp, mtcars)
+extract_eq(mod1)
+```
+
+$$\text{y} = \alpha + \beta_{1}(\text{var1}) + \beta_{2}(\text{var2}) + \epsilon$$
+
+---
+
+# Accessing rail-trails data
+
+- Use the `railtrails` R package
+- Install via `install.packages('railtrails')`)
+
+```{r, message = FALSE}
+library(railtrails)
+
+railtrails
+```
+
+---
+
+# Let's focus in on Tennessee
+
+```{r}
+library(dplyr)
+
+d <- railtrails %>% 
+  filter(state == "TN")
+
+d
+```
+
+---
+
+# Let's fit a linear model
+
+## Unnesting the reviews
+
+```{r}
+d <- d %>% 
+  unnest(raw_reviews) %>% 
+  rename(raw_review = raw_reviews)
+```
+
+- `lm()` will automatically recognize that `name` is a categorical variable
+
+```{r}
+m1 <- lm(raw_review ~ -1 + name, data = d)
+```
+
+- The output is difficult to read (because of the number of trails/`name`s)!
+
+---
+
+# Plotting the results
+
+```{r, fig.align='center', fig.width=5, fig.height=5, warning = FALSE}
+library(ggplot2)
+library(broom)
+tidy(m1) %>% 
+  ggplot(aes(x = reorder(term, estimate), y = estimate)) +
+  geom_point(color = "red") +
+  coord_flip()
+```
+
+---
+
+# Plotting the results with SEs
+
+```{r, eval = TRUE, warning = FALSE, echo = FALSE}
+library(ggplot2)
+p <- tidy(m1) %>% 
+  ggplot(aes(x = reorder(term, estimate), y = estimate)) +
+  geom_point(color = "red") +
+  geom_errorbar(aes(ymin = estimate - std.error,
+                    ymax = estimate + std.error)) +
+  coord_flip()
+```
+
+```{r, fig.align='center', fig.width=5, fig.height=5, warning = FALSE, eval = FALSE}
+tidy(m1) %>% 
+  ggplot(aes(x = reorder(term, estimate), y = estimate)) +
+  geom_point(color = "red") +
+  geom_errorbar(aes(ymin = estimate - std.error,
+                    ymax = estimate + std.error)) +
+  coord_flip()
+```
+
+.pull-left[
+```{r, echo = FALSE, eval = TRUE, fig.width = 5.5, fig.height = 5}
+p
+```
+]
+
+.pull-right[
+**Which trail is best?**
+- White House Greenway?
+- Springfield Greenway?
+- North Chicamauga Creek Greenway?
+]
+
+---
+
+# Interpreting the output
+
+- Gelman and Hill (2007) consider this model to be the model with *no pooling*:
+- The estimates for the trail means are not changed based on 'pooling' together the estimates (or in any other way)
+- The problem is that if we only consider the mean, then we may be ignoring how uncertain the estimates are
+- Ignoring this uncertainity may mean that the estimates are not good: they may be biased
+
+```{r, eval = FALSE, echo = FALSE}
+library(equatiomatic)
+extract_eq(m1, wrap = TRUE, terms_per_line = 3)
+```
+
+$$
+\begin{aligned}
+\text{raw_review} &= \beta_{0}(\text{name}_{\text{Big River Crossing}})\ + \\
+&\quad \beta_{1}(\text{name}_{\text{Brookmeade Greenway}})\ + \\
+&\quad \beta_{2}(\text{name}_{\text{Chattanooga Riverwalk (Tennessee Riverpark)}})\ + \\
+&\quad \beta_{3}(\text{name}_{\text{Clarksville Greenway}})\ + \\
+...
+&\quad \beta_{35}(\text{name}_{\text{Wolftever Creek Greenway}})\ + \\
+&\quad \epsilon
+\end{aligned}
+$$
+
+---
+
+# Other approaches
+
+## What if we ignored the trail completely?
+
+```{r}
+m2 <- lm(raw_review ~ 1, data = d)
+
+m2
+```
+
+Which trail is best?
+
+¯\_(ツ)_/¯ 
+
+---
+
+
+# Interpreting the output
+
+- This can be considered a model with *complete pooling*
+- The estimates are affected by pooling them together
+
+The model is pretty simple: Not sure we need to plot this...
+
+.pull-left[
+```{r, fig.align = 'center', fig.height=3, fig.width=3}
+tidy(m2) %>% 
+  ggplot(aes(x = term, y = estimate)) +
+  geom_errorbar(aes(ymin = estimate - std.error,
+                    ymax = estimate + std.error)) +
+  geom_point() +
+  coord_flip()
+```
+]
+
+.pull-right[
+
+```{r, eval = FALSE}
+extract_eq(m2, use_coef = TRUE)
+```
+
+$$
+\text{raw_review} = 4.34 + \epsilon
+$$
+]
+
+---
+
+# The mixed effects model approach
+
+- Models the reviews as if they are 'grouped' within trails
+- The trail (name) is considered to be a 'grouping factor'
+- (also known as a 'random effect')
+
+```{r, message = FALSE}
+library(lme4) # the most common R package for mixed effects models; see also nlme
+
+m3 <- lmer(raw_review ~ 1 +
+             (1|name),
+           data = d)
+```
+
+This model can be written as an extension of a linear model, where *j* indexes the different trails.:
+
+$$
+{y}=\alpha _{ j }+\epsilon +\\ 
+\alpha _{ j }=\alpha _{ 00 }+\sigma_j
+$$
+
+---
+
+# Checking out the output
+
+```{r}
+m3
+```
+
+---
+
+# Let's create a plot of the output
+
+```{r, warning = FALSE}
+m3_intercept <- tidy(m3) %>% filter(term == "(Intercept)")
+
+m3_ranef <- ranef(m3) %>% as_tibble()
+
+p3 <- m3_ranef %>% 
+  ggplot(aes(x = grp, y = condval + m3_intercept$estimate)) +
+  geom_errorbar(aes(ymin = (condval + m3_intercept$estimate) - condsd,
+                    ymax = (condval + m3_intercept$estimate) + condsd)) +
+  geom_point(color = "green") +
+  coord_flip()
+```
+
+---
+
+# Looking at the plot
+
+```{r}
+p3
+```
+
+---
+
+# Interpreting the output
+
+## Which trail is best?
+
+- Clarksville Greenway?
+- Springfield Greenway?
+- Murfeesboro's Stones River Greenway System?
+
+## What is the model 'like'?
+
+- This model represents the *partial pooling*
+- Grouping factors/random effects:
+- A *variable* with coefficient estimates that differ by group and are modeled with a probability distribution
+- The estimate for the coefficient depends on *how different* the observations associated with the group are and *how systematic* the differences are (relative to all of the observations)
+  - The largest coefficient estimates will be associated with groups that are systematically different
+  - The smallest coefficient estimates will be associated with groups that are either not very different or are not systematically so
+---
+
+# Let's create a graph to compare
+
+```{r}
+dt <- tidy(m1) %>% mutate(term = str_replace(term, "name", ""))
+
+pc <- m3_ranef %>% 
+  ggplot(aes(x = grp, y = condval + m3_intercept$estimate)) +
+  geom_point(color = "darkgreen") +
+  geom_errorbar(aes(ymin = (condval + m3_intercept$estimate) - condsd,
+                    ymax = (condval + m3_intercept$estimate) + condsd),
+                color = 'green') +
+  geom_point(data = dt, aes(x = reorder(term, estimate), y = estimate), color = "red", inherit.aes = FALSE) +
+  geom_errorbar(data = dt, aes(x = reorder(term, estimate),
+                               ymin = estimate - std.error,
+                               ymax = estimate + std.error), color = 'tomato', inherit.aes = FALSE) +
+  coord_flip() +
+  labs(subtitle = "Red = regression estimates; Green = mixed effects model estimates")
+```
+
+---
+# Let's plot the comparisons
+```{r}
+pc
+```
+---
+# Comparing models with no pooling est.
+```{r}
+pc + geom_hline(yintercept = tidy(m2) %>% pull(estimate), color = "darkgray")
+```
+---
+
+# So, which trail is best?
+
+.pull-left[
+## Candidate trails from the regression
+- White House Greenway
+- Springfield Greenway
+- North Chicamauga Creek Greenway
+]
+
+.pull-right[
+## Candidate trails from the mixed effects model
+- Clarksville Greenway
+- Springfield Greenway
+- Murfeesboro's Stones River Greenway System
+]
+
+- The estimates for the groups from the regression tend to me more confident
+  - They exhibit *no pooling*
+- The estimates for the groups from the mixed effects model are nearer to the mean
+  - They exhibit *partial pooling*
+  - Especially for trails with few observations (i.e., North Chicamauga Creek and White House)
+- What about the *complete pooling* estimates?
+  - Not relevant but is often (implicitly) used: Other estimates can be biased
+
+---
+class: inverse, center, middle
+# Extending the mixed effects model
+---
+
+# Adding another grouping factor
+
+- We used a 'varying intercepts' model
+- We can add more grouping factors/random effects
+
+```{r}
+railtrails <- railtrails %>% 
+  unnest(raw_reviews) %>% 
+  rename(raw_review = raw_reviews)
+
+m4 <- lmer(raw_review ~ 1 +
+             (1|name) + 
+             (1|state), 
+           data = railtrails)
+```
+---
+# Inspecting the results
+
+```{r}
+m4
+```
+---
+# Examining the ICC
+
+Is there systematic variation at the state level?
+
+The Intra-class Correlation (ICC) is an estimate for the relationship between higher or lower grouping factor/random effect estimates and the outcome (*y*-variable). 
+
+```{r}
+library(performance)
+icc(m4)
+```
+
+---
+
+# Adding a predictor variable - distance
+
+```{r}
+m5 <- lmer(raw_review ~ 1 +
+             scale(distance) +
+             (1|name) + 
+             (1|state), 
+           data = railtrails)
+
+m5
+```
+
+---
+
+# Preparing other variables - surface
+
+```{r}
+library(forcats)
+library(stringr)
+
+railtrails <- mutate(railtrails,
+                     surface_rc = case_when(
+                       surface == "Asphalt" ~ "Paved",
+                       surface == "Asphalt, Concrete" ~ "Paved",
+                       surface == "Concrete" ~ "Paved",
+                       surface == "Asphalt, Boardwalk" ~ "Paved",
+                       str_detect(surface, "Stone") ~ "Crushed Stone",
+                       str_detect(surface, "Ballast") ~ "Crushed Stone",
+                       str_detect(surface, "Gravel") ~ "Crushed Stone",
+                       TRUE ~ "Other"
+                     )
+)
+```
+
+---
+
+# Adding a predictor variable - surface
+
+```{r}
+m6 <- lmer(raw_review ~ 1 +
+             scale(distance) + 
+             surface_rc +
+             (1|name) + 
+             (1|state), 
+           data = railtrails)
+
+m6
+```
+
+---
+class: inverse, center, middle
+# Connection to Bayesian Methods
+---
+
+# (A very tiny introduction to) Bayesian methods
+
+- Bayesian methods can be distinguished from frequentist methods in two key ways:
+  1. Describing estimates with *probability* statements/distributions
+  1. Using *prior* information in the estimation process
+
+- How is this different from the models we estimated?
+  1. We focused on point estimates (and their standard errors/deviations)
+  1. Partial pooling can be considered an instance of using prior information for the grouping factor/random effects estimates
+
+- Also, the estimation process is *usually* different, but this is not a distinguishing feature
+
+---
+
+# Estimating a model with brms
+
+```{r, eval = TRUE, message = FALSE}
+library(brms)
+m7 <- brm(raw_review ~ 1 +
+            scale(distance) + 
+            surface_rc +
+            (1|name) + 
+            (1|state), 
+          iter = 1000, chains = 3, cores = 3,
+          data = railtrails)
+```
+
+---
+
+# Taking a peak at the model output
+
+```{r}
+m7
+```
+
+Results [should be very similar to those for `m6`](https://joshuamrosenberg.com/blog/explorations-in-markov-chain-monte-carlo-mcmc/).
+
+---
+class: inverse, center, middle
+# Other Extensions
+---
+
+# Modeling complex data structures
+
+- Additional grouping factors/random effects can easily be added
+- Cross-classified grouping factors/random effects can be useful (e.g., when you have time-dependent and location-specific data)
+- Can add an arbitrary number of grouping factors
+- Random slopes allow for predictor variables to be modeled with slopes that differ based on the group (e.g., if there were a variable for "the weather on the day the trail was reviewed" that could have a different effect depending on the trail)
+- Can easily be used to estimate non-linear models (i.e., models with dichotomous or count outcomes)
+- Can estimate multivariate models (with brms)
+
+---
+class: inverse, center, middle
+# Wrapping up
+---
+
+# Summary and Resources
+
+- Mixed effects models are extensions of linear models that allow for complex data
+- They are easy to estimate and to interpret (and to compare to simpler models)
+- Their extensions make them useful for a range of problems
+- They are actively being developed and there is an active community of users to provide support
+- Resources:
+  - [Gelman and Hill (2006)](https://www.amazon.com/Analysis-Regression-Multilevel-Hierarchical-Models/dp/052168689X)
+  - [West, Welch, and Galecki (2014)](https://www.amazon.com/Linear-Mixed-Models-Practical-Statistical/dp/1584884800)
+  - [Kruschke (2014)](https://www.amazon.com/Doing-Bayesian-Data-Analysis-Tutorial/dp/0123814855)
+
+---
+
+# Get in touch!
+
+- [Joshua Rosenberg](mailto:jmrosenberg@utk.edu)
+- GitHub: https://github.com/jrosen48
+- Twitter: [@jrosenberg6432](https://twitter.com/jrosenberg6432)
+- Code: https://github.com/jrosen48/data-science-ish
+- Presentation: https://jrosen48.github.io/data-science-ish
+
+Thank you
