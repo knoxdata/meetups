@@ -3,15 +3,15 @@ Below is a list of the topics, speakers, and links to the folder internal to thi
 
 |    Date    |                            Topic                             |                      Speaker                       |                 Folder                  |
 | :--------: | :----------------------------------------------------------: | :------------------------------------------------: | :-------------------------------------: |
-| 2019-06-20 |         Data Science-Ish: The Use of Mixed Effects Models for Analyzing Complex Data          |             [Josh Rosenberg, PhD](https://github.com/jrosen48)              |           [Folder](/2019_06)            |
-| 2019-05-17 |         Modernizing Nuclear Physics Data Processing          |             [Stan Paulauskas, PhD, PMP](https://github.com/spaulaus)              |           [Folder](/2019_05)            |
-| 2019-04-18 | Understanding Sentiment and Intent: Transfer learning for Natural Language |                Dr. Nikhil Deshmukh                 |           [Folder](/2019_04)            |
+| 2019-06-20 |         Data Science-Ish: The Use of Mixed Effects Models for Analyzing Complex Data          |             [Josh Rosenberg, PhD](https://github.com/jrosen48)              |           [📁](/2019_06)            |
+| 2019-05-17 |         Modernizing Nuclear Physics Data Processing          |             [Stan Paulauskas, PhD, PMP](https://github.com/spaulaus)              |           [📁](/2019_05)            |
+| 2019-04-18 | Understanding Sentiment and Intent: Transfer learning for Natural Language |                Dr. Nikhil Deshmukh                 |           [📁](/2019_04)            |
 | 2019-03-21 | Open Tools for Open Data: A Knoxville Story [Codestock Talk Preview] | [Alex Pawlowski](https://github.com/alexpawlowski) |                                         |
-| 2019-02-22 | Rare event detection and dashboarding for industrial applications |                   Brandon Bagley                   |           [Folder](/2019_02)            |
+| 2019-02-22 | Rare event detection and dashboarding for industrial applications |                   Brandon Bagley                   |           [📁](/2019_02)            |
 | 2018-12-06 |              End of the Year Social with KnoxPy              |                                                    |                                         |
 | 2018-10-09 |          Contribute to Hacktoberfest in Knoxville!           |                                                    |                                         |
 | 2018-10-09 |      Hacktoberfest Knoxville Part Deux: Evening Session      |                                                    |                                         |
-| 2018-09-20 |     Introduction to Geospatial Computing for Pythonistas     |                  [Dr. Paulo Raposo](https://github.com/paulojraposo)                  |           [Folder](/2018_09)            |
+| 2018-09-20 |     Introduction to Geospatial Computing for Pythonistas     |                  [Dr. Paulo Raposo](https://github.com/paulojraposo)                  |           [📁](/2018_09)            |
 | 2018-09-06 |       Attend KnoxPy's Python Workshop [Using Anaconda]       |                                                    |                                         |
 | 2018-08-05 |      Extra Hours: OpenAI Five vs. Humans viewing party       |                                                    |                                         |
 | 2018-07-19 | An intro to deep reinforcement learning (with video games!)  |                    Zach Kimble                     |                                         |
@@ -26,7 +26,7 @@ Below is a list of the topics, speakers, and links to the folder internal to thi
 | 2017-09-21 |    Behind the scenes of making gov data "open" + valuable    |       Tim Kuhn and Alex Zendel, Russ Jensen        |                                         |
 | 2017-08-17 | Machine Learning for Developers: Introduction to Python's Scikit-Learn |                    Jared Smith                     |                                         |
 | 2017-07-20 | All about Olli: The Intersection of Computer Vision and 3D Printing |           Billy Hughes and Charles Hill            |                                         |
-| 2017-06-15 |   Inside the Neural Net with the Keras library for Python    |                    Alex Klibisz                    |           [Folder](/2017_06)            |
+| 2017-06-15 |   Inside the Neural Net with the Keras library for Python    |                    Alex Klibisz                    |           [📁](/2017_06)            |
 | 2017-04-20 |                   Building a Data Workflow                   |                   Alex Pawlowski                   |                                         |
 | 2017-03-23 |                       OpenNight: 3 + 1                       |                                                    |                                         |
 | 2016-10-20 | DSci is back! James with ReviewBox and Krishna talking about proton collisions |                James Horey, Krishna                |                                         |
